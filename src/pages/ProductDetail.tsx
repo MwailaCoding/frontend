@@ -140,8 +140,8 @@ const ProductDetail = () => {
   }
 
   const imageUrl = product.image_path 
-    ? `http://localhost:5000/${product.image_path}`
-    : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800';
+    ? `https://hamilton47.pythonanywhere.com/${product.image_path}`
+    : '/logo.png';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,7 +165,7 @@ const ProductDetail = () => {
                 className="w-full h-64 sm:h-96 object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800';
+                  target.src = '/logo.png';
                 }}
               />
               <div className="absolute top-4 right-4 flex space-x-2">

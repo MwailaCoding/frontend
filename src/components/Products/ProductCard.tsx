@@ -120,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
 
   const imageUrl = product.image_path 
                   ? `${API_CONFIG.BASE_URL}/${product.image_path}`
-    : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+    : '/logo.png';
 
   // Debug logging
   
@@ -137,7 +137,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+                  target.src = '/logo.png';
                 }}
               />
               <div className="absolute top-2 left-2">
@@ -226,7 +226,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+              target.src = '/logo.png';
             }}
           />
           

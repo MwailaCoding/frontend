@@ -202,12 +202,12 @@ const AdminProducts = () => {
               <div key={product.product_id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <img
-                    src={product.image_path ? `http://localhost:5000/${product.image_path}` : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                    src={product.image_path ? `https://hamilton47.pythonanywhere.com/${product.image_path}` : '/logo.png'}
                     alt={product.name}
                     className="w-full h-48 object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+                      target.src = '/logo.png';
                     }}
                   />
                   <div className="absolute top-2 right-2 flex space-x-2">

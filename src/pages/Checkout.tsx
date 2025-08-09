@@ -342,7 +342,7 @@ const Checkout = () => {
                 {state.items.map((item) => (
                   <div key={`${item.product_id}-${item.customization || 'default'}`} className="flex items-center space-x-3 py-2">
                     <img
-                      src={item.image_path ? `http://localhost:5000/${item.image_path}` : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                      src={item.image_path ? `https://hamilton47.pythonanywhere.com/${item.image_path}` : '/logo.png'}
                       alt={item.name}
                       className="w-12 h-12 object-cover rounded-lg"
                     />

@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://hamilton47.pythonanywhere.com',
+  BASE_URL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'https://hamilton47.pythonanywhere.com'),
   ENDPOINTS: {
     // Auth
     LOGIN: '/api/auth/login',

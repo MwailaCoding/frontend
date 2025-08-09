@@ -111,8 +111,8 @@ const Cart = () => {
           <div className="lg:col-span-2 space-y-3">
             {state.items.map((item) => {
               const imageUrl = item.image_path 
-                ? `http://localhost:5000/${item.image_path}`
-                : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=300';
+                ? `https://hamilton47.pythonanywhere.com/${item.image_path}`
+                : '/logo.png';
 
               return (
                 <div key={`${item.product_id}-${item.customization || 'default'}`} className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
@@ -125,7 +125,7 @@ const Cart = () => {
                         className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=300';
+                          target.src = '/logo.png';
                         }}
                       />
                     </div>

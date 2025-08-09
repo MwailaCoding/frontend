@@ -167,7 +167,7 @@ const SimpleProductCard: React.FC<SimpleProductCardProps> = ({
   // Construct image URL the same way as ProductCard
   const imageUrl = product.image_path 
     ? `${API_CONFIG.BASE_URL}/${product.image_path}`
-    : 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+    : '/logo.png';
 
   return (
     <div className={`group relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden ${className}`}>
@@ -179,7 +179,7 @@ const SimpleProductCard: React.FC<SimpleProductCardProps> = ({
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
+            target.src = '/logo.png';
           }}
         />
 
