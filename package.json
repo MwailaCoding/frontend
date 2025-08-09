@@ -14,8 +14,12 @@
     "dev:prod": "VITE_API_URL=https://hamilton47.pythonanywhere.com vite",
     "deploy:netlify": "npm run build && echo 'Build complete! Upload dist folder to Netlify'",
     "deploy:vercel": "npm run build && npx vercel --prod",
+    "deploy:vercel:dev": "npm run build && npx vercel",
+    "vercel-build": "npm run build",
+    "start": "vite preview --port $PORT --host 0.0.0.0",
     "clean": "rm -rf dist node_modules package-lock.json",
-    "fresh-install": "npm run clean && npm install"
+    "fresh-install": "npm run clean && npm install",
+    "postbuild": "echo 'Build completed successfully for production deployment'"
   },
   "dependencies": {
     "caniuse-lite": "^1.0.30001732",
