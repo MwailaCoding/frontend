@@ -103,14 +103,9 @@ export const getAuthHeaders = (token: string) => ({
 // Image URL utility - handles both development and production
 export const getImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {
-    return '/logo.png'; // Default fallback
+    return '/logo.png'; // Only for products with no image
   }
   
-  // In production, use proxy path (through Vercel)
-  if (import.meta.env.PROD) {
-    return `/${imagePath}`; // Proxy will route to backend
-  }
-  
-  // In development, use direct backend URL
+  // Always use the full backend URL since that's where images are stored
   return `https://hamilton47.pythonanywhere.com/${imagePath}`;
 };

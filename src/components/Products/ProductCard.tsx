@@ -134,8 +134,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {
+                  console.error('Failed to load image:', getImageUrl(product.image_path));
+                  // Try direct backend URL
                   const target = e.target as HTMLImageElement;
-                  target.src = '/logo.png';
+                  if (product.image_path && !target.src.includes('hamilton47.pythonanywhere.com')) {
+                    target.src = `https://hamilton47.pythonanywhere.com/${product.image_path}`;
+                  }
                 }}
               />
               <div className="absolute top-2 left-2">
@@ -223,8 +227,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
             alt={product.name}
             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
+              console.error('Failed to load image:', getImageUrl(product.image_path));
+              // Try direct backend URL
               const target = e.target as HTMLImageElement;
-              target.src = '/logo.png';
+              if (product.image_path && !target.src.includes('hamilton47.pythonanywhere.com')) {
+                target.src = `https://hamilton47.pythonanywhere.com/${product.image_path}`;
+              }
             }}
           />
           

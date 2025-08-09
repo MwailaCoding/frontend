@@ -9,10 +9,6 @@
       "destination": "https://hamilton47.pythonanywhere.com/api/$1"
     },
     {
-      "source": "/uploads/(.*)",
-      "destination": "https://hamilton47.pythonanywhere.com/uploads/$1"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

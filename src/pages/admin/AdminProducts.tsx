@@ -206,8 +206,12 @@ const AdminProducts = () => {
                     alt={product.name}
                     className="w-full h-48 object-cover"
                     onError={(e) => {
+                      console.error('Failed to load image:', getImageUrl(product.image_path));
+                      // Try direct backend URL without any modification
                       const target = e.target as HTMLImageElement;
-                      target.src = '/logo.png';
+                      if (product.image_path && !target.src.includes('hamilton47.pythonanywhere.com')) {
+                        target.src = `https://hamilton47.pythonanywhere.com/${product.image_path}`;
+                      }
                     }}
                   />
                   <div className="absolute top-2 right-2 flex space-x-2">
