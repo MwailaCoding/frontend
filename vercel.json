@@ -75,10 +75,5 @@
       "VITE_DEBUG": "false"
     }
   },
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "regions": ["iad1"]
 }
