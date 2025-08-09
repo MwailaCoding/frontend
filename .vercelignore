@@ -1,49 +1,13 @@
-# Dependencies
+# Only ignore what's not needed for build
 node_modules
-
-# Development files
-src
-public
-*.md
-README.md
-PERFORMANCE_*.md
-SIMPLIFIED_*.md
-
-# Build artifacts (only deploy dist)
-.vite
-*.local
-
-# Environment files
-.env*
-!.env.production
-
-# Configuration files
-vite.config.ts
-tsconfig*.json
-postcss.config.js
-tailwind.config.js
-eslint.config.js
-
-# Development scripts
-test-backend-connection.js
-deploy.sh
-
-# Git
 .git
-.gitignore
-
-# IDE
 .vscode
 .idea
-*.swp
-*.swo
-
-# OS
+*.log
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
