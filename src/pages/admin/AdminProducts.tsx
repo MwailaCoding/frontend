@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import ProductForm from '../../components/Admin/ProductForm';
 import { Product } from '../../types';
-import { apiGet, apiDelete, apiPut, getAuthHeaders, API_CONFIG } from '../../config/api';
+import { apiGet, apiDelete, apiPut, getAuthHeaders, API_CONFIG, getImageUrl } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatPreparationTime } from '../../utils/timeUtils';
 
@@ -202,7 +202,7 @@ const AdminProducts = () => {
               <div key={product.product_id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <img
-                    src={product.image_path ? `https://hamilton47.pythonanywhere.com/${product.image_path}` : '/logo.png'}
+                    src={getImageUrl(product.image_path)}
                     alt={product.name}
                     className="w-full h-48 object-cover"
                     onError={(e) => {

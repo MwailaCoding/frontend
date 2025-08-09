@@ -99,3 +99,18 @@ export const getAuthHeaders = (token: string) => ({
   'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json',
 });
+
+// Image URL utility - handles both development and production
+export const getImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return '/logo.png'; // Default fallback
+  }
+  
+  // In production, use proxy path (through Vercel)
+  if (import.meta.env.PROD) {
+    return `/${imagePath}`; // Proxy will route to backend
+  }
+  
+  // In development, use direct backend URL
+  return `https://hamilton47.pythonanywhere.com/${imagePath}`;
+};

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Heart, Star, ShoppingCart, Eye, Share2, ArrowRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { API_CONFIG } from '../../config/api';
+import { API_CONFIG, getImageUrl } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -165,9 +165,7 @@ const SimpleProductCard: React.FC<SimpleProductCardProps> = ({
   };
 
   // Construct image URL the same way as ProductCard
-  const imageUrl = product.image_path 
-    ? `${API_CONFIG.BASE_URL}/${product.image_path}`
-    : '/logo.png';
+  const imageUrl = getImageUrl(product.image_path);
 
   return (
     <div className={`group relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden ${className}`}>

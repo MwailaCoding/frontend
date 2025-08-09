@@ -6,7 +6,7 @@ import { useCart } from '../../contexts/CartContext';
 import Card3D from '../UI/Card3D';
 import GlowingButton from '../UI/GlowingButton';
 import { Product } from '../../types';
-import { API_CONFIG } from '../../config/api';
+import { API_CONFIG, getImageUrl } from '../../config/api';
 import { formatPreparationTime } from '../../utils/timeUtils';
 
 interface ProductCardProps {
@@ -118,9 +118,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
     });
   };
 
-  const imageUrl = product.image_path 
-                  ? `${API_CONFIG.BASE_URL}/${product.image_path}`
-    : '/logo.png';
+  const imageUrl = getImageUrl(product.image_path);
 
   // Debug logging
   
