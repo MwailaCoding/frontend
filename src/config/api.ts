@@ -1,0 +1,101 @@
+// API Configuration
+export const API_CONFIG = {
+  BASE_URL: import.meta.env.VITE_API_URL || 'https://hamilton47.pythonanywhere.com',
+  ENDPOINTS: {
+    // Auth
+    LOGIN: '/api/auth/login',
+    VALIDATE_TOKEN: '/api/auth/validate',
+    
+    // Products
+    PRODUCTS: '/api/products',
+    PRODUCT_DETAIL: (id: string) => `/api/products/${id}`,
+    ADMIN_PRODUCTS: '/api/admin/products',
+    ADMIN_PRODUCT_DETAIL: (id: string) => `/api/admin/products/${id}`,
+    ADMIN_PRODUCT_AVAILABILITY: (id: string) => `/api/admin/products/${id}/availability`,
+    
+    // Categories
+    CATEGORIES: '/api/categories',
+    
+    // Orders
+    ORDERS: '/api/orders',
+    ORDER_DETAIL: (id: string) => `/api/orders/${id}`,
+    ORDER_BY_PHONE: '/api/orders/by-phone',
+    UPDATE_ORDER_STATUS: (id: string) => `/api/orders/${id}/status`,
+    ADMIN_ORDERS: '/api/admin/orders',
+    ADMIN_ORDER_STATUS: (id: string) => `/api/admin/orders/${id}/status`,
+    ADMIN_ORDER_PRIORITY: (id: string) => `/api/admin/orders/${id}/priority`,
+    ADMIN_BULK_ORDER_STATUS: '/api/admin/orders/bulk-status',
+    ADMIN_ORDER_ANALYTICS: '/api/admin/orders/analytics',
+    
+    // Payment Requests
+    PAYMENT_REQUESTS: '/api/payment-requests',
+    PAYMENT_REQUEST_BY_ORDER: (orderId: string) => `/api/payment-requests/${orderId}`,
+    ADMIN_PAYMENT_REQUESTS: '/api/admin/payment-requests',
+    ADMIN_PAYMENT_REQUEST_UPDATE: (id: string) => `/api/admin/payment-requests/${id}`,
+    
+    // Payment Verification
+    VERIFY_TRANSACTION: '/api/payment/verify-transaction',
+    ADMIN_PAYMENT_VERIFICATIONS: '/api/admin/payment-verifications',
+    ADMIN_VERIFY_PAYMENT: (id: string) => `/api/admin/verify-payment/${id}`,
+    
+    // MPESA
+    MPESA_PAYMENT: '/api/mpesa/request-payment',
+    
+    // Uploads
+    UPLOADS: '/uploads',
+    THUMBNAILS: '/uploads/thumbnails',
+    
+    // WhatsApp
+    WHATSAPP_CHATS: '/api/admin/whatsapp/chats',
+    WHATSAPP_CHAT_STATUS: (id: string) => `/api/admin/whatsapp/chats/${id}/status`,
+    WHATSAPP_STATS: '/api/admin/whatsapp/stats',
+    WHATSAPP_TEMPLATES: '/api/admin/whatsapp/templates',
+    
+    // Receipts
+    RECEIPT: (id: string) => `/api/receipt/${id}`,
+    RECEIPT_DOWNLOAD: (id: string) => `/api/receipt/${id}/download`
+  }
+};
+
+// API utility functions
+export const apiRequest = async (
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> => {
+  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  return fetch(url, defaultOptions);
+};
+
+export const apiGet = (endpoint: string, options: RequestInit = {}) => 
+  apiRequest(endpoint, { method: 'GET', ...options });
+
+export const apiPost = (endpoint: string, data: any) => 
+  apiRequest(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const apiPut = (endpoint: string, data: any, options: RequestInit = {}) => 
+  apiRequest(endpoint, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    ...options,
+  });
+
+export const apiDelete = (endpoint: string, options: RequestInit = {}) => 
+  apiRequest(endpoint, { method: 'DELETE', ...options });
+
+// Auth utility
+export const getAuthHeaders = (token: string) => ({
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json',
+});

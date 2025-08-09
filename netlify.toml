@@ -1,0 +1,42 @@
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Directory to publish after build
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# SPA redirect rules for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://hamilton47.pythonanywhere.com;"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Environment variables for different deploy contexts
+[context.production.environment]
+  VITE_API_URL = "https://hamilton47.pythonanywhere.com"
+
+[context.deploy-preview.environment]
+  VITE_API_URL = "https://hamilton47.pythonanywhere.com"
+
+[context.branch-deploy.environment]
+  VITE_API_URL = "https://hamilton47.pythonanywhere.com"
