@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Phone, MapPin, Clock, CheckCircle, Package, Truck, Home, DollarSign, CreditCard, RefreshCw, Wifi, WifiOff, Download } from 'lucide-react';
+import { Search, Phone, MapPin, Clock, CheckCircle, Package, Truck, Home, DollarSign, CreditCard, RefreshCw, Wifi, WifiOff, Download, ChevronRight, ChevronLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiGet, API_CONFIG } from '../config/api';
 import TransactionVerification from '../components/TransactionVerification';
@@ -31,16 +31,26 @@ interface Order {
   }>;
 }
 
+interface OrderSummary {
+  order_id: number;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  items_count: number;
+}
+
 const OrderTracking = () => {
   const [searchParams] = useSearchParams();
   const [phone, setPhone] = useState(() => {
     // Get phone from URL parameters, otherwise use empty string
     return searchParams.get('phone') || '';
   });
-  const [order, setOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<OrderSummary[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [previousOrder, setPreviousOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
   const [showTransactionVerification, setShowTransactionVerification] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   
   // Real-time functionality states
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
@@ -70,28 +80,41 @@ const OrderTracking = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Enhanced status change detection
-        const hasStatusChanged = checkStatusChange(data, order);
-        
-        if (order && hasStatusChanged) {
-          setPreviousOrder(order);
-          setStatusChanged(true);
+        // Check if data is an array (multiple orders) or single order
+        if (Array.isArray(data)) {
+          // Multiple orders - show list view
+          setOrders(data);
+          setSelectedOrder(null);
+          setViewMode('list');
+          setLastRefresh(new Date());
+        } else {
+          // Single order - show detail view
+          setOrders([]);
+          setSelectedOrder(data);
+          setViewMode('detail');
           
-          // Show toast notification for status change
-          toast.success(`Order status updated to: ${data.status.replace('_', ' ').toUpperCase()}`, {
-            duration: 5000,
-            icon: '🎉',
-          });
+          // Enhanced status change detection
+          const hasStatusChanged = checkStatusChange(data, selectedOrder);
           
-          // Reset animation after 3 seconds
-          setTimeout(() => {
-            setStatusChanged(false);
-            setPreviousOrder(null);
-          }, 3000);
+          if (selectedOrder && hasStatusChanged) {
+            setPreviousOrder(selectedOrder);
+            setStatusChanged(true);
+            
+            // Show toast notification for status change
+            toast.success(`Order status updated to: ${data.status.replace('_', ' ').toUpperCase()}`, {
+              duration: 5000,
+              icon: '🎉',
+            });
+            
+            // Reset animation after 3 seconds
+            setTimeout(() => {
+              setStatusChanged(false);
+              setPreviousOrder(null);
+            }, 3000);
+          }
+          
+          setLastRefresh(new Date());
         }
-        
-        setOrder(data);
-        setLastRefresh(new Date());
         
         if (isInitialLoad.current) {
           isInitialLoad.current = false;
@@ -101,25 +124,47 @@ const OrderTracking = () => {
         if (!isAutoRefresh) {
           toast.error('No orders found for this phone number. Please check your phone number.');
         }
-        setOrder(null);
+        setOrders([]);
+        setSelectedOrder(null);
+        setViewMode('list');
         stopAutoRefresh();
       } else {
         if (!isAutoRefresh) {
           toast.error('Failed to fetch order details');
         }
-        setOrder(null);
+        setOrders([]);
+        setSelectedOrder(null);
+        setViewMode('list');
       }
     } catch (error) {
       console.error('Error fetching order:', error);
       if (!isAutoRefresh) {
         toast.error('Failed to fetch order details');
       }
-      setOrder(null);
+      setOrders([]);
+      setSelectedOrder(null);
+      setViewMode('list');
     } finally {
       if (!isAutoRefresh) {
         setLoading(false);
       }
     }
+  };
+
+  // Handle order selection
+  const handleOrderSelect = (orderSummary: OrderSummary) => {
+    // Find the full order details
+    const fullOrder = orders.find(o => o.order_id === orderSummary.order_id);
+    if (fullOrder) {
+      setSelectedOrder(fullOrder as any); // Type assertion for now
+      setViewMode('detail');
+    }
+  };
+
+  // Go back to order list
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedOrder(null);
   };
 
   // Auto-refresh functionality
@@ -183,20 +228,20 @@ const OrderTracking = () => {
 
   // Start auto-refresh when order is loaded
   useEffect(() => {
-    if (order && isAutoRefreshEnabled) {
+    if (selectedOrder && isAutoRefreshEnabled) {
       startAutoRefresh();
     } else {
       stopAutoRefresh();
     }
 
     return () => stopAutoRefresh();
-  }, [order, isAutoRefreshEnabled, refreshInterval, phone]);
+  }, [selectedOrder, isAutoRefreshEnabled, refreshInterval, phone]);
 
   // Handle online/offline status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      if (order && isAutoRefreshEnabled) {
+      if (selectedOrder && isAutoRefreshEnabled) {
         startAutoRefresh();
       }
     };
@@ -213,7 +258,7 @@ const OrderTracking = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [order, isAutoRefreshEnabled]);
+  }, [selectedOrder, isAutoRefreshEnabled]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -328,8 +373,82 @@ const OrderTracking = () => {
           </div>
         </div>
 
-        {/* Real-time Controls */}
-        {order && (
+        {/* Order List - Show when multiple orders found */}
+        {viewMode === 'list' && orders.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Your Orders ({orders.length})
+              </h2>
+              <button
+                onClick={() => setIsAutoRefreshEnabled(!isAutoRefreshEnabled)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isAutoRefreshEnabled 
+                    ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title={isAutoRefreshEnabled ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+              >
+                <RefreshCw className={`w-5 h-5 ${isAutoRefreshEnabled ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {orders.map((order) => (
+                <div 
+                  key={order.order_id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-green-300 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => handleOrderSelect(order)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-lg font-semibold text-gray-900">
+                          Order #{order.order_id}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {order.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span>KSh {order.total_amount.toLocaleString()}</span>
+                        <span>•</span>
+                        <span>{order.items_count} items</span>
+                        <span>•</span>
+                        <span>{formatDate(order.created_at)}</span>
+                      </div>
+                    </div>
+                    <div className="text-gray-400">
+                      <ChevronRight className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                💡 Click on any order to view detailed tracking information
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Back to List Button - Show when viewing order details */}
+        {viewMode === 'detail' && selectedOrder && (
+          <div className="mb-6">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back to Order List
+            </button>
+          </div>
+        )}
+
+        {/* Real-time Controls - Show only when viewing order details */}
+        {viewMode === 'detail' && selectedOrder && (
           <div className="bg-white rounded-xl shadow-md p-4 mb-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               {/* Status Indicator */}
@@ -374,7 +493,8 @@ const OrderTracking = () => {
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <RefreshCw className={`w-4 h-4 ${isAutoRefreshEnabled ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${isAutoRefreshEnabled ? 'animate-spin' : ''}`}
+                  />
                   <span>{isAutoRefreshEnabled ? 'Auto-refresh ON' : 'Auto-refresh OFF'}</span>
                 </button>
 
@@ -393,19 +513,19 @@ const OrderTracking = () => {
         )}
 
         {/* Order Details */}
-        {order && (
+        {selectedOrder && (
           <div className="space-y-3 sm:space-y-6">
             {/* Order Info */}
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Order #{order.order_id}</h2>
-                  <p className="text-gray-600">Placed on {formatDate(order.created_at)}</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Order #{selectedOrder.order_id}</h2>
+                  <p className="text-gray-600">Placed on {formatDate(selectedOrder.created_at)}</p>
                 </div>
-                <div className={`px-4 py-2 rounded-full font-medium transition-all duration-500 ${getStatusColor(order.status)} ${
+                <div className={`px-4 py-2 rounded-full font-medium transition-all duration-500 ${getStatusColor(selectedOrder.status)} ${
                   statusChanged ? 'animate-pulse ring-4 ring-green-300' : ''
                 }`}>
-                  {order.status.replace('_', ' ').toUpperCase()}
+                  {selectedOrder.status.replace('_', ' ').toUpperCase()}
                   {statusChanged && <span className="ml-2">🎉</span>}
                 </div>
               </div>
@@ -415,8 +535,8 @@ const OrderTracking = () => {
                   <Phone className="w-5 h-5 text-green-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-900">Customer</p>
-                    <p className="text-gray-600">{order.customer_name}</p>
-                    <p className="text-gray-600">{order.phone}</p>
+                    <p className="text-gray-600">{selectedOrder.customer_name}</p>
+                    <p className="text-gray-600">{selectedOrder.phone}</p>
                   </div>
                 </div>
 
@@ -424,7 +544,7 @@ const OrderTracking = () => {
                   <MapPin className="w-5 h-5 text-green-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-900">Delivery Address</p>
-                    <p className="text-gray-600">{order.delivery_address}</p>
+                    <p className="text-gray-600">{selectedOrder.delivery_address}</p>
                   </div>
                 </div>
 
@@ -433,11 +553,11 @@ const OrderTracking = () => {
                   <div>
                     <p className="font-medium text-gray-900">Total Amount</p>
                     <p className="text-2xl font-bold text-green-600">
-                      KSh {order.total_amount.toLocaleString()}
+                      KSh {selectedOrder.total_amount.toLocaleString()}
                     </p>
-                    {order.payment_method && (
+                    {selectedOrder.payment_method && (
                       <p className="text-sm text-gray-600 mt-1">
-                        Payment Method: <span className="font-medium capitalize">{order.payment_method}</span>
+                        Payment Method: <span className="font-medium capitalize">{selectedOrder.payment_method}</span>
                       </p>
                     )}
                   </div>
@@ -445,7 +565,7 @@ const OrderTracking = () => {
               </div>
 
               {/* Payment Method Details */}
-              {order.payment_method === 'mpesa' && (
+              {selectedOrder.payment_method === 'mpesa' && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <h3 className="font-semibold text-green-800 mb-3">M-PESA Send Money Details</h3>
                   <div className="space-y-2 text-sm text-green-700">
@@ -459,7 +579,7 @@ const OrderTracking = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Amount:</span>
-                      <span className="font-mono font-semibold">KSh {order.total_amount.toLocaleString()}</span>
+                      <span className="font-mono font-semibold">KSh {selectedOrder.total_amount.toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="mt-3 p-2 bg-white rounded border border-green-200">
@@ -473,7 +593,7 @@ const OrderTracking = () => {
 
               {/* Payment Request Button */}
               <div className="mt-6 flex justify-center gap-3">
-                {order.payment_method === 'mpesa' && order.status === 'pending' && (
+                {selectedOrder.payment_method === 'mpesa' && selectedOrder.status === 'pending' && (
                   <button
                     onClick={() => setShowTransactionVerification(true)}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
@@ -484,11 +604,11 @@ const OrderTracking = () => {
                 )}
                 
                 {/* Download Receipt Button - Only available when order is out for delivery or delivered */}
-                {(order.status === 'out_for_delivery' || order.status === 'delivered') && (
+                {(selectedOrder.status === 'out_for_delivery' || selectedOrder.status === 'delivered') && (
                   <button
                     onClick={async () => {
                       try {
-                        await generateReceipt(order.order_id);
+                        await generateReceipt(selectedOrder.order_id);
                         toast.success('Receipt downloaded successfully!');
                       } catch (error) {
                         console.error('Receipt download error:', error);
@@ -503,7 +623,7 @@ const OrderTracking = () => {
                 )}
 
                 {/* Receipt Not Available Message */}
-                {order.status !== 'out_for_delivery' && order.status !== 'delivered' && (
+                {selectedOrder.status !== 'out_for_delivery' && selectedOrder.status !== 'delivered' && (
                   <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg">
                     <Download className="w-5 h-5" />
                     <span className="text-sm">
@@ -527,7 +647,7 @@ const OrderTracking = () => {
               </div>
               
               <div className="relative">
-                {getStatusSteps(order.status).map((step, index) => (
+                {getStatusSteps(selectedOrder.status).map((step, index) => (
                   <div key={step.key} className="flex items-center mb-8 last:mb-0">
                     <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-500 ${
                       step.completed 
@@ -557,7 +677,7 @@ const OrderTracking = () => {
                       )}
                     </div>
 
-                    {index < getStatusSteps(order.status).length - 1 && (
+                    {index < getStatusSteps(selectedOrder.status).length - 1 && (
                       <div className={`absolute left-6 w-0.5 h-8 mt-12 transition-colors duration-500 ${
                         step.completed ? 'bg-green-600' : 'bg-gray-300'
                       }`} style={{ top: `${index * 6 + 3}rem` }} />
@@ -584,12 +704,12 @@ const OrderTracking = () => {
             </div>
 
             {/* Order Items */}
-            {order.items && order.items.length > 0 && (
+            {selectedOrder.items && selectedOrder.items.length > 0 && (
               <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Order Items</h3>
                 
                 <div className="space-y-3">
-                  {order.items.map((item, index) => (
+                  {selectedOrder.items.map((item, index) => (
                     <div key={index} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
                       <div>
                         <p className="font-medium text-gray-900">{item.product_name}</p>
@@ -620,14 +740,14 @@ const OrderTracking = () => {
         )}
 
         {/* No Order Found */}
-        {!loading && !order && phone && (
+        {!loading && viewMode === 'list' && orders.length === 0 && phone && (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
               <Search className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Order Not Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Orders Found</h3>
             <p className="text-gray-600 mb-4">
-              We couldn't find an order with the provided details. Please check your phone number.
+              We couldn't find any orders with the provided phone number. Please check your phone number.
             </p>
             <div className="space-y-2 text-sm text-gray-500">
               <p>• Make sure you entered the correct phone number</p>
@@ -637,11 +757,11 @@ const OrderTracking = () => {
         )}
       </div>
 
-      {showTransactionVerification && order && (
+      {showTransactionVerification && selectedOrder && (
         <TransactionVerification
-          orderId={order.order_id}
-          phoneNumber={order.phone}
-          amount={order.total_amount}
+          orderId={selectedOrder.order_id}
+          phoneNumber={selectedOrder.phone}
+          amount={selectedOrder.total_amount}
           onClose={() => setShowTransactionVerification(false)}
           onVerificationSubmitted={() => {
             // Refresh order data after verification submission
