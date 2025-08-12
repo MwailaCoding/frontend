@@ -17,9 +17,9 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import BackendStatus from '../BackendStatus';
 import PerformanceMonitor from '../PerformanceMonitor';
-import PaymentRequestsModal from './PaymentRequestsModal';
+import PaymentRequests from './PaymentRequests';
 import WhatsAppDashboard from './WhatsAppDashboard';
-import PaymentVerificationsModal from './PaymentVerificationsModal';
+import PaymentVerifications from './PaymentVerifications';
 import { apiGet, getAuthHeaders, API_CONFIG } from '../../config/api';
 
 interface AdminLayoutProps {
@@ -424,7 +424,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {showPaymentRequests && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-4xl max-h-[95vh] overflow-y-auto bg-white rounded-lg shadow-xl">
-            <PaymentRequestsModal onClose={() => setShowPaymentRequests(false)} />
+            <PaymentRequests onClose={() => setShowPaymentRequests(false)} />
           </div>
         </div>
       )}
@@ -442,7 +442,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {showPaymentVerifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto bg-white rounded-lg shadow-xl">
-            <PaymentVerificationsModal onClose={() => setShowPaymentVerifications(false)} />
+            <PaymentVerifications onClose={() => setShowPaymentVerifications(false)} />
           </div>
         </div>
       )}
