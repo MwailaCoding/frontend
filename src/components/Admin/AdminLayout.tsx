@@ -1,24 +1,25 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
-  LogOut, 
-  ChefHat,
-  Menu,
-  X,
-  DollarSign,
-  CheckCircle,
-  MessageCircle,
-  RefreshCw
+  DollarSign, 
+  CheckCircle, 
+  MessageCircle, 
+  Menu, 
+  X, 
+  LogOut,
+  Bell,
+  User
 } from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import PaymentRequests from './PaymentRequests';
+import { useAuth } from '../../contexts/AuthContext';
+import BackendStatus from '../BackendStatus';
+import PerformanceMonitor from '../PerformanceMonitor';
+import PaymentRequestsModal from './PaymentRequestsModal';
 import WhatsAppDashboard from './WhatsAppDashboard';
-import PaymentVerifications from './PaymentVerifications';
+import PaymentVerificationsModal from './PaymentVerificationsModal';
 import { apiGet, getAuthHeaders, API_CONFIG } from '../../config/api';
 
 interface AdminLayoutProps {
@@ -139,7 +140,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-600 to-purple-700 rounded-full flex items-center justify-center">
-              <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-gray-900">Sera's Kitchen</h1>
@@ -249,6 +250,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               ))}
             </div>
           </div>
+
+          {/* Performance Monitor */}
+          <div className="mt-6 sm:mt-8 px-3">
+            <PerformanceMonitor showDetails={true} />
+          </div>
         </nav>
 
         {/* Logout Button */}
@@ -339,6 +345,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <BackendStatus showDetails={true} />
               <Link
                 to="/"
                 target="_blank"
@@ -417,7 +424,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {showPaymentRequests && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-4xl max-h-[95vh] overflow-y-auto bg-white rounded-lg shadow-xl">
-            <PaymentRequests onClose={() => setShowPaymentRequests(false)} />
+            <PaymentRequestsModal onClose={() => setShowPaymentRequests(false)} />
           </div>
         </div>
       )}
@@ -435,7 +442,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {showPaymentVerifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto bg-white rounded-lg shadow-xl">
-            <PaymentVerifications onClose={() => setShowPaymentVerifications(false)} />
+            <PaymentVerificationsModal onClose={() => setShowPaymentVerifications(false)} />
           </div>
         </div>
       )}

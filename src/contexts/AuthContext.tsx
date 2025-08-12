@@ -30,14 +30,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const adminId = localStorage.getItem('adminId');
       
       if (token && adminId) {
-        // Temporarily disable token validation to test
-        console.log('Using stored token without validation');
-        setAuth({
-          isAuthenticated: true,
-          adminId: parseInt(adminId),
-          token,
-          isLoading: false
-        });
+        try {
+          // Validate token with backend
+          const response = await apiGet(API_CONFIG.ENDPOINTS.VALIDATE_TOKEN, {
+            headers: getAuthHeaders(token)
+          });
+
+          if (response.ok) {
+            // Token is valid
+            setAuth({
+              isAuthenticated: true,
+              adminId: parseInt(adminId),
+              token,
+              isLoading: false
+            });
+          } else {
+            // Token is invalid or expired
+            console.log('Stored token is invalid or expired');
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminId');
+            setAuth({
+              isAuthenticated: false,
+              adminId: null,
+              token: null,
+              isLoading: false
+            });
+          }
+        } catch (error) {
+          console.error('Error validating token:', error);
+          // Network error - remove stored token to be safe
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminId');
+          setAuth({
+            isAuthenticated: false,
+            adminId: null,
+            token: null,
+            isLoading: false
+          });
+        }
       } else {
         // No stored token, set loading to false
         setAuth(prev => ({ ...prev, isLoading: false }));

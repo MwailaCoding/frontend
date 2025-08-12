@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'https://hamilton47.pythonanywhere.com'),
+  BASE_URL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://hamilton47.pythonanywhere.com' : 'http://localhost:5000'),
   ENDPOINTS: {
     // Auth
     LOGIN: '/api/auth/login',
@@ -57,7 +57,7 @@ export const API_CONFIG = {
   }
 };
 
-// API utility functions
+// API utility functions with better error handling
 export const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -72,7 +72,35 @@ export const apiRequest = async (
     ...options,
   };
 
-  return fetch(url, defaultOptions);
+  try {
+    const response = await fetch(url, defaultOptions);
+    
+    // Log API calls for debugging
+    console.log(`API Call: ${response.status} ${response.statusText} - ${url}`);
+    
+    return response;
+  } catch (error) {
+    console.error(`API Request failed for ${url}:`, error);
+    throw error;
+  }
+};
+
+// Health check function to test backend connectivity
+export const checkBackendHealth = async (): Promise<{ isHealthy: boolean; status: number; message: string }> => {
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      return { isHealthy: true, status: response.status, message: 'Backend is healthy' };
+    } else {
+      return { isHealthy: false, status: response.status, message: `Backend returned ${response.status}` };
+    }
+  } catch (error) {
+    return { isHealthy: false, status: 0, message: 'Backend is unreachable' };
+  }
 };
 
 export const apiGet = (endpoint: string, options: RequestInit = {}) => 

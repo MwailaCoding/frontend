@@ -19,7 +19,9 @@
     "start": "vite preview --port $PORT --host 0.0.0.0",
     "clean": "rm -rf dist node_modules package-lock.json",
     "fresh-install": "npm run clean && npm install",
-    "postbuild": "echo 'Build completed successfully for production deployment'"
+    "postbuild": "echo 'Build completed successfully for production deployment'",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "build:seo": "npm run generate-sitemap && npm run build"
   },
   "dependencies": {
     "caniuse-lite": "^1.0.30001732",

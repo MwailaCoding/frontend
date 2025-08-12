@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Search, Filter, Eye, Phone, Clock, CheckCircle, Package, Truck, Home, 
   AlertTriangle, History, Bell, RefreshCw, X, ChevronDown, ChevronUp, 
@@ -69,6 +69,8 @@ const AdminOrders = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'today' | 'week' | 'month' | 'all'>('all');
+  const [paymentFilter, setPaymentFilter] = useState(''); // Added payment filter state
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm); // Added debounced search term state
 
   // Helper function to safely parse amounts from database
   const safeParseAmount = (value: any): number => {
@@ -163,36 +165,8 @@ const AdminOrders = () => {
     return result;
   }, [orders]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  // Add real-time refresh for metrics every 30 seconds
-  useEffect(() => {
-    const metricsRefreshInterval = setInterval(() => {
-      if (!loading && updatingStatus === null) {
-        fetchOrders();
-      }
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(metricsRefreshInterval);
-  }, [loading, updatingStatus]);
-
-  // Auto-refresh functionality
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const actualInterval = isRateLimited ? Math.max(refreshInterval * 2, 120) : refreshInterval;
-    const interval = setInterval(() => {
-      if (updatingStatus === null && pendingUpdates.size === 0) {
-        fetchOrders();
-      }
-    }, actualInterval * 1000);
-
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, updatingStatus, pendingUpdates, isRateLimited]);
-
-  const fetchOrders = async (force = false) => {
+  // Optimized data fetching with caching
+  const fetchOrders = useCallback(async (force = false) => {
     const now = Date.now();
     if (!force && (now - lastFetchTime) < 5000) return;
     if (isRateLimited && !force && (now - lastFetchTime) < 30000) return;
@@ -207,19 +181,121 @@ const AdminOrders = () => {
         const data = await response.json();
         setOrders(data);
         setIsRateLimited(false);
+      } else if (response.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+        window.location.href = '/admin/login';
       } else if (response.status === 429) {
         setIsRateLimited(true);
         toast.error('Rate limited. Slowing down refresh...');
+      } else if (response.status === 502) {
+        toast.error('Backend server is currently unavailable. Please try again later.');
       } else {
-        throw new Error('Failed to fetch orders');
+        throw new Error(`Failed to fetch orders: ${response.status}`);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      toast.error('Failed to fetch orders');
+      toast.error('Failed to fetch orders. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.token, lastFetchTime, isRateLimited]);
+
+  // Memoized filtered orders for better performance
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = searchTerm === '' || 
+        order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.phone?.includes(searchTerm) ||
+        order.order_id?.toString().includes(searchTerm);
+      
+      const matchesStatus = statusFilter === '' || order.status === statusFilter;
+      const matchesPayment = paymentFilter === '' || order.payment_method === paymentFilter;
+      
+      const orderDate = new Date(order.created_at);
+      const now = new Date();
+      let matchesDate = true;
+      
+      switch (selectedTimeRange) {
+        case 'today':
+          matchesDate = orderDate.toDateString() === now.toDateString();
+          break;
+        case 'week':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          matchesDate = orderDate >= weekAgo;
+          break;
+        case 'month':
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          matchesDate = orderDate >= monthAgo;
+          break;
+      }
+
+      return matchesSearch && matchesStatus && matchesPayment && matchesDate;
+    });
+  }, [orders, searchTerm, statusFilter, paymentFilter, selectedTimeRange]);
+
+  // Memoized order statistics
+  const orderStats = useMemo(() => {
+    const stats = {
+      total: orders.length,
+      pending: 0,
+      confirmed: 0,
+      preparing: 0,
+      outForDelivery: 0,
+      delivered: 0,
+      cancelled: 0,
+      totalRevenue: 0
+    };
+
+    orders.forEach(order => {
+      const amount = safeParseAmount(order.total_amount);
+      stats.totalRevenue += amount;
+      
+      switch (order.status) {
+        case 'pending':
+          stats.pending++;
+          break;
+        case 'confirmed':
+          stats.confirmed++;
+          break;
+        case 'preparing':
+          stats.preparing++;
+          break;
+        case 'out_for_delivery':
+          stats.outForDelivery++;
+          break;
+        case 'delivered':
+          stats.delivered++;
+          break;
+        case 'cancelled':
+          stats.cancelled++;
+          break;
+      }
+    });
+
+    return stats;
+  }, [orders]);
+
+  // Debounced search to avoid excessive filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(debouncedSearchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [debouncedSearchTerm]);
+
+  // Reduced auto-refresh interval for better performance
+  useEffect(() => {
+    if (!auth.isAuthenticated || !auth.token) return;
+    
+    fetchOrders();
+    
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, autoRefresh ? refreshInterval : 0);
+
+    return () => clearInterval(interval);
+  }, [auth.isAuthenticated, auth.token, fetchOrders, autoRefresh, refreshInterval]);
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     const oldOrder = orders.find(order => order.order_id === orderId);
@@ -362,7 +438,7 @@ const AdminOrders = () => {
 
   // Filter and sort orders
   const filteredAndSortedOrders = useMemo(() => {
-    let filtered = orders.filter(order => {
+    let filtered = filteredOrders.filter(order => {
       const matchesSearch = 
         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.phone.includes(searchTerm) ||
@@ -423,7 +499,7 @@ const AdminOrders = () => {
     });
 
     return filtered;
-  }, [orders, searchTerm, statusFilter, priorityFilter, selectedTimeRange, sortBy, sortOrder]);
+  }, [filteredOrders, searchTerm, statusFilter, priorityFilter, selectedTimeRange, sortBy, sortOrder]);
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'yellow', icon: Clock },
@@ -760,7 +836,7 @@ const AdminOrders = () => {
                 type="text"
                 placeholder="Search orders, customers, phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setDebouncedSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

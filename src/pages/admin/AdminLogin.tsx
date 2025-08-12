@@ -35,10 +35,24 @@ const AdminLogin = () => {
     try {
       const response = await apiPost(API_CONFIG.ENDPOINTS.LOGIN, formData);
 
+      // Check if response is JSON before trying to parse
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // Handle non-JSON response (likely HTML error page)
+        const textResponse = await response.text();
+        console.error('Non-JSON response received:', textResponse);
+        
+        if (response.status === 502) {
+          toast.error('Backend server is currently unavailable. Please try again later.');
+        } else {
+          toast.error(`Server error (${response.status}). Please try again later.`);
+        }
+        return;
+      }
+
       const data = await response.json();
 
       if (response.ok) {
-
         login(data.token, data.admin_id);
         toast.success('Login successful!');
         navigate('/admin/dashboard');
@@ -47,7 +61,11 @@ const AdminLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Network error. Please try again.');
+      if (error instanceof SyntaxError) {
+        toast.error('Invalid response from server. Please try again.');
+      } else {
+        toast.error('Network error. Please check your connection and try again.');
+      }
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,7 @@ import {
 import { useCart } from '../contexts/CartContext';
 import { apiGet, API_CONFIG } from '../config/api';
 import SimpleProductCard from '../components/Products/SimpleProductCard';
+import { SEOHead } from '../components/SEO';
 
 
 interface Product {
@@ -163,7 +164,40 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <>
+      <SEOHead 
+        title="Sera's Kitchen - Authentic Kenyan Cuisine & Premium Catering Services"
+        description="Transform your events with authentic Kenyan cuisine and artisan cakes from Sera's Kitchen. Premium catering services, fast delivery, and unforgettable flavors. Order online today!"
+        keywords="Kenyan catering, premium catering services, artisan cakes, authentic Kenyan cuisine, event catering, Nairobi catering, African food catering, custom cakes, wedding catering, corporate catering"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Restaurant",
+          "name": "Sera's Kitchen",
+          "description": "Premium catering services with authentic Kenyan cuisine and artisan cakes",
+          "url": "https://your-domain.vercel.app",
+          "logo": "https://your-domain.vercel.app/logo.png",
+          "image": "https://your-domain.vercel.app/logo.png",
+          "telephone": "+254-XXX-XXX-XXX",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "KE",
+            "addressLocality": "Nairobi"
+          },
+          "servesCuisine": ["Kenyan", "African", "Cakes", "Desserts"],
+          "priceRange": "$$",
+          "openingHours": "Mo-Su 08:00-22:00",
+          "deliveryAvailable": true,
+          "takeoutAvailable": true,
+          "cateringAvailable": true,
+          "menu": "https://your-domain.vercel.app/products",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "1247"
+          }
+        }}
+      />
+      <div className="min-h-screen">
 
       {/* Advanced Hero Section */}
       <section className="relative h-[80vh] overflow-hidden bg-gradient-to-br from-red-600 via-orange-500 to-red-700">
@@ -481,7 +515,8 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 
