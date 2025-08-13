@@ -8,6 +8,7 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import SimpleSearchBar from '../UI/SimpleSearchBar';
 import ConnectionStatus from '../ConnectionStatus';
+import BackendStatus from '../BackendStatus';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,7 +92,7 @@ const Header = () => {
                 Fresh ingredients daily
               </span>
               <span className="text-red-300">•</span>
-              <ConnectionStatus className="text-red-300" />
+              <BackendStatus className="text-red-300" showDetails={true} />
             </div>
           </div>
         </div>

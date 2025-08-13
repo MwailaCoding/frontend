@@ -57,10 +57,12 @@ export const API_CONFIG = {
   }
 };
 
-// API utility functions with better error handling
+// Enhanced API utility functions with automatic retry and better error handling
 export const apiRequest = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount = 0,
+  maxRetries = 3
 ): Promise<Response> => {
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
   
@@ -78,38 +80,46 @@ export const apiRequest = async (
     // Log API calls for debugging
     console.log(`API Call: ${response.status} ${response.statusText} - ${url}`);
     
+    // Handle retryable errors
+    if (shouldRetry(response.status) && retryCount < maxRetries) {
+      const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+      console.log(`Retrying ${url} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return apiRequest(endpoint, options, retryCount + 1, maxRetries);
+    }
+    
     return response;
   } catch (error) {
-    console.error(`API Request failed for ${url}:`, error);
+    // Handle network errors with retry
+    if (retryCount < maxRetries) {
+      const delay = Math.pow(2, retryCount) * 1000;
+      console.log(`Network error, retrying ${url} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return apiRequest(endpoint, options, retryCount + 1, maxRetries);
+    }
+    
+    console.error(`API Request failed for ${url} after ${maxRetries} retries:`, error);
     throw error;
   }
 };
 
-// Health check function to test backend connectivity
-export const checkBackendHealth = async (): Promise<{ isHealthy: boolean; status: number; message: string }> => {
-  try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/health`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    if (response.ok) {
-      return { isHealthy: true, status: response.status, message: 'Backend is healthy' };
-    } else {
-      return { isHealthy: false, status: response.status, message: `Backend returned ${response.status}` };
-    }
-  } catch (error) {
-    return { isHealthy: false, status: 0, message: 'Backend is unreachable' };
-  }
+// Determine if an error status should trigger a retry
+const shouldRetry = (status: number): boolean => {
+  // Retry on server errors and temporary issues
+  return status >= 500 || status === 429; // 5xx errors + rate limiting
 };
 
+// Enhanced API functions with better error messages
 export const apiGet = (endpoint: string, options: RequestInit = {}) => 
   apiRequest(endpoint, { method: 'GET', ...options });
 
-export const apiPost = (endpoint: string, data: any) => 
+export const apiPost = (endpoint: string, data: any, options: RequestInit = {}) => 
   apiRequest(endpoint, {
     method: 'POST',
     body: JSON.stringify(data),
+    ...options,
   });
 
 export const apiPut = (endpoint: string, data: any, options: RequestInit = {}) => 
