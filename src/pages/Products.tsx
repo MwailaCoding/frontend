@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Star, Clock, ShoppingCart, Heart, Grid3X3, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Filter, Star, Clock, ShoppingCart, Heart, Grid3X3, List, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { apiGet, API_CONFIG } from '../config/api';
 import ProductCard from '../components/Products/ProductCard';
