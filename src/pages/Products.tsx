@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Filter, Search, Grid, List, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Filter, Star, Clock, ShoppingCart, Heart, Grid3X3, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
+import { apiGet, API_CONFIG } from '../config/api';
 import ProductCard from '../components/Products/ProductCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { SEOHead } from '../components/SEO';
 import ProductFilters from '../components/Products/ProductFilters';
 import { Product, Category } from '../types';
-import { apiGet, API_CONFIG } from '../config/api';
 
 const Products = () => {
   const { category } = useParams();
@@ -154,7 +157,7 @@ const Products = () => {
                 onClick={() => setViewMode('grid')}
                 className={`p-3 ${viewMode === 'grid' ? 'bg-green-600 text-white' : 'bg-white text-gray-600'}`}
               >
-                <Grid className="w-5 h-5" />
+                <Grid3X3 className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
@@ -169,7 +172,7 @@ const Products = () => {
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center space-x-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <SlidersHorizontal className="w-5 h-5" />
+              <ArrowUpDown className="w-5 h-5" />
               <span className="hidden sm:block">Filters</span>
             </button>
           </div>
@@ -222,18 +225,16 @@ const Products = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {[...Array(6)].map((_, index) => (
-                  <div key={index} className="bg-white rounded-xl shadow-md animate-pulse">
-                    <div className="h-48 bg-gray-300 rounded-t-xl" />
-                    <div className="p-6">
-                      <div className="h-4 bg-gray-300 rounded mb-2" />
-                      <div className="h-4 bg-gray-300 rounded w-2/3 mb-4" />
-                      <div className="h-6 bg-gray-300 rounded w-1/3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <LoadingSpinner 
+                message="Loading products..."
+                timeout={15000}
+                onTimeout={() => setLoading(false)}
+                showRetry={true}
+                onRetry={() => {
+                  setLoading(true);
+                  fetchProducts();
+                }}
+              />
             ) : filteredAndSortedProducts.length === 0 ? (
               <div className="text-center py-8 sm:py-12">
                 <div className="w-24 h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">

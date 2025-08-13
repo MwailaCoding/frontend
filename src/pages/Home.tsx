@@ -10,6 +10,7 @@ import { useCart } from '../contexts/CartContext';
 import { apiGet, API_CONFIG } from '../config/api';
 import SimpleProductCard from '../components/Products/SimpleProductCard';
 import { SEOHead } from '../components/SEO';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 
 interface Product {
@@ -154,12 +155,17 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading delicious food...</p>
-        </div>
-      </div>
+      <LoadingSpinner 
+        message="Loading delicious food..."
+        timeout={15000}
+        onTimeout={() => setLoading(false)}
+        showRetry={true}
+        onRetry={() => {
+          setLoading(true);
+          fetchProducts();
+          fetchHomeStats();
+        }}
+      />
     );
   }
 
